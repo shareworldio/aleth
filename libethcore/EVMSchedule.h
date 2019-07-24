@@ -146,6 +146,7 @@ static const EVMSchedule IstanbulSchedule = [] {
     schedule.sloadGas = 800;
     schedule.balanceGas = 700;
     schedule.extcodehashGas = 700;
+    schedule.precompileStaticCallGas = 40;
     schedule.haveChainID = true;
     schedule.haveSelfbalance = true;
     schedule.eip2200Mode = true;
