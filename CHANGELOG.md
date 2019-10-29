@@ -4,6 +4,7 @@
 
 - Added: [#5699](https://github.com/ethereum/aleth/pull/5699) EIP 2046: Reduced gas cost for static calls made to precompiles.
 - Added: [#5752](https://github.com/ethereum/aleth/pull/5752) [#5753](https://github.com/ethereum/aleth/pull/5753) Implement EIP1380 (reduced gas costs for call-to-self).
+- Added: [#5741](https://github.com/ethereum/aleth/pull/5741) Support for individual EIP activation to facilitate EIP-centric network upgrade process.
 - Removed: [#5760](https://github.com/ethereum/aleth/pull/5760) Official support for Visual Studio 2015 has been dropped. Compilation with this compiler is expected to stop working after migration to C++14. 
 
 ## [1.7.0] - Unreleased
@@ -22,7 +23,6 @@
 - Added: [#5640](https://github.com/ethereum/aleth/pull/5640) Support EIP-1702 Generalized Account Versioning Scheme (active only in Experimental fork.)
 - Added: [#5691](https://github.com/ethereum/aleth/pull/5691) Istanbul support: EIP-2028 Transaction data gas cost reduction.
 - Added: [#5696](https://github.com/ethereum/aleth/pull/5696) [#5708](https://github.com/ethereum/aleth/pull/5708) Istanbul support: EIP-1344 ChainID opcode.
-- Added: [#5699](https://github.com/ethereum/aleth/pull/5699) Istanbul support: EIP 2046: Reduced gas cost for static calls made to precompiles.
 - Added: [#5700](https://github.com/ethereum/aleth/pull/5700) [#5725](https://github.com/ethereum/aleth/pull/5725) Istanbul support: EIP 1884 Repricing for trie-size-dependent opcodes.
 - Added: [#5701](https://github.com/ethereum/aleth/issues/5701) Outputs ENR text representation in admin.nodeInfo RPC.
 - Added: [#5705](https://github.com/ethereum/aleth/pull/5705) Istanbul support: EIP 1108 Reduce alt_bn128 precompile gas costs.
