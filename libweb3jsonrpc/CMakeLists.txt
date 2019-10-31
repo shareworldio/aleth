@@ -33,6 +33,8 @@ set(sources
     Web3.cpp
     Web3.h
     Web3Face.h
+    SafeHttpServer.cpp
+    SafeHttpServer.h
 )
 
 if(WIN32)
@@ -84,4 +86,4 @@ jsonrpcstub_create(web3jsonrpc test.json
     TestClient ${CMAKE_CURRENT_BINARY_DIR} TestClient
 )
 
-target_link_libraries(web3jsonrpc ethashseal webthree libjson-rpc-cpp::server)
+target_link_libraries(web3jsonrpc ethashseal webthree libjson-rpc-cpp::server JsonRpcCpp::Server hiredis argtable2 gcov)

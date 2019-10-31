@@ -87,6 +87,7 @@ message("Crypto++: ${HUNTER_cryptopp_VERSION}")
 
 include(ProjectSecp256k1)
 include(ProjectLibFF)
+include(ProjectJsonRpcCpp)
 
 find_package(Threads)
 

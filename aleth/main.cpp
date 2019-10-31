@@ -29,6 +29,7 @@
 #include <libweb3jsonrpc/AccountHolder.h>
 #include <libweb3jsonrpc/Eth.h>
 #include <libweb3jsonrpc/ModularServer.h>
+#include <libweb3jsonrpc/SafeHttpServer.h>
 #include <libweb3jsonrpc/IpcServer.h>
 #include <libweb3jsonrpc/Net.h>
 #include <libweb3jsonrpc/Web3.h>
@@ -143,6 +144,12 @@ int main(int argc, char** argv)
     string publicIP;
     string remoteHost;
     unsigned short remotePort = dev::p2p::c_defaultListenPort;
+
+	int httpRpcPort = -1;
+	bool adminViaHttp = false;
+	std::string rpcCorsDomain = "";
+	std::string httpsKey = "";
+	std::string httpsCert = "";
 
     unsigned peers = 11;
     unsigned peerStretch = 7;
@@ -273,6 +280,18 @@ int main(int argc, char** argv)
         "Connect to the given remote host (default: none)");
     addNetworkingOption("port", po::value<short>()->value_name("<port>"),
         "Connect to the given remote port (default: 30303)");
+
+	addNetworkingOption("json-rpc-port", po::value<short>()->value_name("<port>"),
+        "Specify JSON-RPC server port (default: 8545).");
+	addNetworkingOption("admin-via-http", po::value<string>()->value_name("<on/off>"),
+        "Expose admin interface via http - UNSAFE! (default: off).");
+	addNetworkingOption("rpccorsdomain", po::value<string>()->value_name("<string>"),
+        "Domain on which to send Access-Control-Allow-Origin header.");
+	addNetworkingOption("https_key", po::value<string>()->value_name("<string>"),
+        "Https private key.");
+	addNetworkingOption("https_cert", po::value<string>()->value_name("<string>"),
+        "Https certificate.");
+	
     addNetworkingOption("network-id", po::value<unsigned>()->value_name("<n>"),
         "Only connect to other hosts with this network id");
     addNetworkingOption("allow-local-discovery", po::bool_switch(&allowLocalDiscovery),
@@ -563,6 +582,50 @@ int main(int argc, char** argv)
     {
         remotePort = vm["port"].as<short>();
     }
+
+	if (vm.count("json-rpc-port"))
+    {
+        httpRpcPort = vm["json-rpc-port"].as<short>();
+    }
+	if (vm.count("admin-via-http"))
+    {
+        string m = vm["admin-via-http"].as<string>();
+        if (isTrue(m))
+            adminViaHttp = true;
+        else if (isFalse(m))
+            adminViaHttp = false;
+        else
+        {
+            cerr << "Bad " << "--admin-via-http" << " option: " << m << "\n";
+            return -1;
+        }
+    }
+	if (vm.count("rpccorsdomain"))
+    {
+        rpcCorsDomain = vm["rpccorsdomain"].as<string>();
+
+		string::size_type pos = rpcCorsDomain.find_first_not_of('"');
+		if (pos != string::npos)
+		{
+			rpcCorsDomain = rpcCorsDomain.substr(pos);
+		}
+
+		pos = rpcCorsDomain.find_last_not_of('"');
+		if (pos != string::npos)
+		{
+			rpcCorsDomain = rpcCorsDomain.substr(0, pos+1);
+		}
+    }
+	if (vm.count("https_key"))
+    {
+        httpsKey = vm["rpccorsdomain"].as<string>();
+    }
+	if (vm.count("https_cert"))
+    {
+        httpsCert = vm["rpccorsdomain"].as<string>();
+    }
+
+	
     if (vm.count("import"))
     {
         mode = OperationMode::Import;
@@ -941,6 +1004,7 @@ int main(int argc, char** argv)
     unique_ptr<rpc::SessionManager> sessionManager;
     unique_ptr<SimpleAccountHolder> accountHolder;
     unique_ptr<ModularServer<>> jsonrpcIpcServer;
+	unique_ptr<ModularServer<>> jsonrpcHttpServer;
 
 
     AddressHash allowedDestinations;
@@ -1007,6 +1071,48 @@ int main(int argc, char** argv)
         cout << "JSONRPC Admin Session Key: " << jsonAdmin << "\n";
     }
 
+	if (httpRpcPort > -1)
+    {
+    	using FullServer = ModularServer<
+            rpc::EthFace,
+            rpc::NetFace, rpc::Web3Face, rpc::PersonalFace,
+            rpc::AdminEthFace, rpc::AdminNetFace,
+            rpc::DebugFace, rpc::TestFace
+        >;
+		
+        rpc::AdminEth* adminEth = nullptr;
+		rpc::PersonalFace* personal = nullptr;
+		rpc::AdminNet* adminNet = nullptr;
+		if (adminViaHttp)
+		{
+			personal = new rpc::Personal(keyManager, *accountHolder, *web3.ethereum());
+			adminEth = new rpc::AdminEth(*web3.ethereum(), *gasPricer.get(), keyManager, *sessionManager.get());
+			adminNet = new rpc::AdminNet(web3, *sessionManager.get());
+		}
+
+		auto ethFace = new rpc::Eth(*web3.ethereum(), *accountHolder.get());
+        rpc::TestFace* testEth = nullptr;
+        if (testingMode)
+            testEth = new rpc::Test(*web3.ethereum());
+		
+		jsonrpcHttpServer.reset(new FullServer(
+			ethFace,
+			new rpc::Net(web3), new rpc::Web3(web3.clientVersion()), personal,
+			adminEth, adminNet,
+			new rpc::Debug(*web3.ethereum()),
+			testEth
+		));
+		
+		int SensibleHttpThreads = 1;
+		//int port = 8545;
+		auto httpConnector = new SafeHttpServer(httpRpcPort, httpsKey, httpsCert, SensibleHttpThreads);
+		httpConnector->setAllowedOrigin(rpcCorsDomain);
+		jsonrpcHttpServer->addConnector(httpConnector);
+		jsonrpcHttpServer->StartListening();
+
+        cout << "HTTP JSONRPC Admin Session Key: " << jsonAdmin << "\n";
+    }
+
     if (web3.isNetworkStarted())
     {
         for (auto const& p: preferredNodes)
@@ -1033,8 +1139,13 @@ int main(int argc, char** argv)
     while (!exitHandler.shouldExit())
         stopSealingAfterXBlocks(&c, n, mining);
 
-    if (jsonrpcIpcServer.get())
+    if (jsonrpcIpcServer.get()){
         jsonrpcIpcServer->StopListening();
+    }
+
+	if (jsonrpcHttpServer.get()){
+		jsonrpcHttpServer->StopListening();
+	}
 
     if (web3.isNetworkStarted())
     {
