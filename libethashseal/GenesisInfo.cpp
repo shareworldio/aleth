@@ -8,6 +8,7 @@ using namespace dev;
 //Client configurations
 #include "genesis/mainNetwork.cpp"
 #include "genesis/ropsten.cpp"
+#include "genesis/qpos.cpp"
 
 //Test configurations
 #include "genesis/test/berlinTest.cpp"
@@ -45,6 +46,7 @@ std::string const& dev::eth::genesisInfo(Network _n)
     //Client genesis
     case Network::MainNetwork: return c_genesisInfoMainNetwork;
     case Network::Ropsten: return c_genesisInfoRopsten;
+	case Network::Qpos: return c_genesisInfoQpos;
 
     //Test genesis
     case Network::MainNetworkTest: return c_genesisInfoMainNetworkTest;
@@ -93,6 +95,7 @@ h256 const& dev::eth::genesisStateRoot(Network _n)
     switch (_n)
     {
     case Network::MainNetwork: return c_genesisStateRootMainNetwork;
+	case Network::Qpos:
     case Network::Ropsten:
     case Network::MainNetworkTest:
     case Network::TransitionnetTest:

@@ -147,6 +147,7 @@ public:
     /// sending of blocks is done on the network thread).
     void propagateNewBlocks(std::shared_ptr<VerifiedBlocks const> const& _newBlocks);
 
+	void setFilter(std::function<bool(p2p::NodeID, unsigned _id, RLP const& _r)> _filter) {m_filter = _filter; };
 private:
     static char const* const c_stateNames[static_cast<int>(SyncState::Size)];
     static constexpr std::chrono::milliseconds c_backgroundWorkInterval{1000};
@@ -208,6 +209,8 @@ private:
     Logger m_loggerWarn{createLogger(VerbosityWarning, "ethcap")};
     /// Logger for messages about impolite behaivour of peers.
     Logger m_loggerImpolite{createLogger(VerbosityDebug, "impolite")};
+
+	std::function<bool(p2p::NodeID, unsigned _id, RLP const& _r)> m_filter;
 };
 
 }

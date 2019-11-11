@@ -123,4 +123,55 @@ bool isFalse(std::string const& _m)
     return _m == "off" || _m == "no" || _m == "false" || _m == "0";
 }
 
+string Demangle(const char* name)
+{  
+    string dname;
+    int status = 0;
+    char* pdname = abi::__cxa_demangle(name, NULL, 0, &status);     
+    if(status == 0)
+    {
+        dname.assign(pdname);
+        free(pdname);
+    }
+    else
+    {
+        dname.assign("[unknown function]");
+    }
+    return dname;
+}
+
+void DumpStack(void)
+{
+	#define SIZE 10000
+	
+	int nptrs;
+	void *buffer[SIZE];
+	char **strings;
+	nptrs = backtrace(buffer, SIZE);
+ 
+	strings = backtrace_symbols(buffer, nptrs);
+	if (strings == NULL) {
+		cdebug << "backtrace_symbols";
+		exit(EXIT_FAILURE);
+	}
+
+	for(int i = 1; i < nptrs; ++i)
+	{
+		const string funinfo(strings[i]);
+		const int posleftparenthesis = funinfo.rfind('(');
+		const int posplus = funinfo.rfind('+');
+		const int posleftbracket = funinfo.rfind('[');
+		const int posrightbracket = funinfo.rfind(']');
+
+		long long unsigned int offset = strtoull(funinfo.substr(posleftbracket+1, posrightbracket-posleftbracket-1).c_str(), NULL, 0);
+		const string module_name = funinfo.substr(0, posleftparenthesis);
+		const string function = Demangle(funinfo.substr(posleftparenthesis+1, posplus-posleftparenthesis-1).c_str());
+
+		cdebug << offset << "#" << module_name << "#" << function;
+	}
+	
+	free(strings);
+}
+
+
 }  // namespace dev

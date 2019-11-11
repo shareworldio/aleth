@@ -44,6 +44,8 @@
 
 #include <aleth/buildinfo.h>
 
+#include <libqpos/Qpos.h>
+
 using namespace std;
 using namespace dev;
 using namespace dev::p2p;
@@ -117,6 +119,7 @@ int main(int argc, char** argv)
     Ethash::init();
     NoProof::init();
     NoReward::init();
+	Qpos::init();
 
     /// Operating mode.
     OperationMode mode = OperationMode::Node;
@@ -155,6 +158,7 @@ int main(int argc, char** argv)
     unsigned peerStretch = 7;
     std::map<p2p::NodeID, pair<NodeIPEndpoint, bool>> preferredNodes;
     bool bootstrap = true;
+	bool qpos = false;
     bool disableDiscovery = false;
     bool allowLocalDiscovery = false;
     static const unsigned NoNetworkID = (unsigned)-1;
@@ -213,6 +217,7 @@ int main(int argc, char** argv)
     po::options_description clientDefaultMode("CLIENT MODE (default)", c_lineWidth);
     auto addClientOption = clientDefaultMode.add_options();
     addClientOption("mainnet", "Use the main network protocol");
+	addClientOption("qpos", "Use the qpos network protocol");
     addClientOption("ropsten", "Use the Ropsten testnet");
     addClientOption("test", "Testing mode; disable PoW and provide test rpc interface");
     addClientOption("config", po::value<string>()->value_name("<file>"),
@@ -530,6 +535,12 @@ int main(int argc, char** argv)
         chainParams = ChainParams(genesisInfo(eth::Network::Ropsten), genesisStateRoot(eth::Network::Ropsten));
         chainConfigIsSet = true;
     }
+	if (vm.count("qpos"))
+    {
+        chainParams = ChainParams(genesisInfo(eth::Network::Qpos), genesisStateRoot(eth::Network::Qpos));
+        chainConfigIsSet = true;
+		qpos = true;
+    }
     if (vm.count("ask"))
     {
         try
@@ -780,6 +791,8 @@ int main(int argc, char** argv)
     std::string additional;
 
     auto getPassword = [&](string const& prompt) {
+		return string("");
+		
         bool s = g_silence;
         g_silence = true;
         cout << "\n";
@@ -1010,7 +1023,7 @@ int main(int argc, char** argv)
     AddressHash allowedDestinations;
 
     std::function<bool(TransactionSkeleton const&, bool)> authenticator;
-    if (testingMode)
+    if (testingMode || qpos)
         authenticator = [](TransactionSkeleton const&, bool) -> bool { return true; };
     else
         authenticator = [&](TransactionSkeleton const& _t, bool isProxy) -> bool {
@@ -1121,7 +1134,7 @@ int main(int argc, char** argv)
             else
                 web3.addNode(p.first, p.second.first);
 
-        if (bootstrap)
+        if (bootstrap && !qpos)
             for (auto const& i : defaultBootNodes())
                 web3.addNode(i.first, i.second);
         if (!remoteHost.empty())

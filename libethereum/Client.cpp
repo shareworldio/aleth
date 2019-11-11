@@ -16,6 +16,10 @@
 #include <memory>
 #include <thread>
 
+#include <libethcore/ABI.h>
+#include <libethcore/CommonJS.h>
+#include <libsolidity/Solidity.h>
+
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -549,6 +553,12 @@ void Client::resetState()
     onTransactionQueueReady();
 }
 
+void Client::onImprted(Address _contrant, std::function< void() > _f)
+{
+	DEV_RECURSIVE_GUARDED(x_onImprted)
+		m_onImprted[_contrant].push_back(_f);
+}
+
 void Client::onChainChanged(ImportRoute const& _ir)
 {
 //  ctrace << "onChainChanged()";
@@ -570,6 +580,22 @@ void Client::onChainChanged(ImportRoute const& _ir)
         resyncStateFromChain();
     noteChanged(changeds);
     m_onChainChanged(_ir.deadBlocks, _ir.liveBlocks);
+
+
+	DEV_RECURSIVE_GUARDED(x_onImprted)
+	{
+		for (auto const& t: _ir.goodTransactions)
+	    {
+			if(m_onImprted.count(t.to())){
+				for(auto item : m_onImprted[t.to()])
+					item();
+			}
+
+			//clog(ClientTrace) << "Safely dropping transaction " << t.sha3();
+	        m_tq.dropGood(t);
+	    }
+	}
+	this->reportBlocks(_ir.liveBlocks);
 }
 
 bool Client::remoteActive() const
@@ -954,3 +980,61 @@ std::tuple<h256, h256, h256> Client::getWork()
 
     return sealEngine()->getWork(m_sealingInfo);
 }
+
+void Client::setFilter(std::function<bool(p2p::NodeID, unsigned _id, RLP const& _r)> _filter)
+{ 
+	if (auto h = m_host.lock()) 
+		h->setFilter(_filter);
+}
+
+bytes Client::call(Address _dest, bytes const& _data, BlockNumber _blockNumber)
+{
+	(void)_dest;
+	(void)_data;
+	(void)_blockNumber;
+	//return bytes();
+	return call(jsToAddress(nodeAddress()), u256(0), _dest, _data, Invalid256, Invalid256, _blockNumber, FudgeFactor::Lenient).output;
+	//call(Address const& _from, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, BlockNumber _blockNumber, FudgeFactor _ff = FudgeFactor::Strict)
+}
+
+std::string Client::getNodes(string const& _node, BlockNumber _blockNumber)
+{
+	bytes data;
+	if(_node == "")
+	{
+		data = dev::eth::ContractABI().abiIn("getAllNode()");
+	}
+	else
+	{
+		data = dev::eth::ContractABI().abiIn("getNode(string)", _node);
+	}
+
+	bytes result = call(jsToAddress(nodeAddress()), u256(0), jsToAddress(nodeAddress()), data, 0x100000000, 0, _blockNumber, FudgeFactor::Lenient).output;
+	//bytes result = call(jsToAddress(nodeAddress()), data, _blockNumber);
+	string out = eth::abiOut<std::string>(result);
+	if(out == ""){
+		DumpStack();
+	}
+
+	cdebug << "data=" << data << ",_blockNumber=" << _blockNumber << ",out=" << out;
+	return out;
+}
+
+std::string Client::getNodeAbi() const
+{
+	string abi = compileNodeAbi();
+	cdebug << "abi=" << abi;
+	return abi;
+}
+
+std::string Client::getOwner()
+{
+	bytes data = dev::eth::ContractABI().abiIn("owner()");
+	bytes result = call(jsToAddress(nodeAddress()), data, LatestBlock);
+	string out = toJS(eth::abiOut<Address>(result));
+
+	cdebug << "data=" << data << "result=" << result << "out=" << out;
+	return out;
+}
+
+

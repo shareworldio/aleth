@@ -256,6 +256,7 @@ public:
     /// Get the header information on the present block.
     BlockHeader const& info() const { return m_currentBlock; }
 
+	bool empty() const;
 private:
     SealEngineFace* sealEngine() const;
 

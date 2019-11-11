@@ -1208,3 +1208,32 @@ std::unique_ptr<ba::steady_timer> Host::createTimer(std::chrono::seconds const& 
     timer->async_wait(_f);
     return timer;
 }
+
+bool Host::onInit(std::function<void ()> _fun)
+{
+	boost::asio::deadline_timer timer(m_ioContext, boost::posix_time::milliseconds(0));
+	timer.async_wait(boost::bind(_fun));
+
+	return true;
+}
+
+void tickFun(const boost::system::error_code& _e, std::shared_ptr<boost::asio::deadline_timer> _timer, unsigned _t, std::function<void (const boost::system::error_code& _e)> _fun)
+{
+	(void)_e;
+
+	_fun(_e);
+
+	_timer->expires_from_now(boost::posix_time::milliseconds(_t));
+	_timer->async_wait(boost::bind(tickFun, boost::asio::placeholders::error, _timer, _t, _fun));
+}
+
+bool Host::onTick(unsigned _t, std::function<void (const boost::system::error_code& _e)> _fun)
+{
+	std::shared_ptr<boost::asio::deadline_timer> timer(new boost::asio::deadline_timer(m_ioContext, boost::posix_time::milliseconds(_t)));
+	m_tickTimer.push_back(timer);
+	
+	timer->async_wait(boost::bind(tickFun, boost::asio::placeholders::error, timer, _t, _fun));
+
+	return true;
+}
+	

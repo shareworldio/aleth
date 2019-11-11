@@ -62,8 +62,8 @@ include(EthUtils)
 
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
-hunter_add_package(Boost COMPONENTS program_options filesystem system thread context fiber log)
-find_package(Boost CONFIG REQUIRED program_options filesystem system thread context fiber log)
+hunter_add_package(Boost COMPONENTS program_options filesystem system thread context fiber log regex)
+find_package(Boost CONFIG REQUIRED program_options filesystem system thread context fiber log regex)
 
 hunter_add_package(jsoncpp)
 find_package(jsoncpp CONFIG REQUIRED)
@@ -124,7 +124,8 @@ add_subdirectory(libethashseal)
 
 add_subdirectory(libwebthree)
 add_subdirectory(libweb3jsonrpc)
-
+add_subdirectory(libqpos)
+add_subdirectory(libsolidity)
 add_subdirectory(aleth)
 
 if (TOOLS)

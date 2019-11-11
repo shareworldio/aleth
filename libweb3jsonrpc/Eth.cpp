@@ -311,7 +311,10 @@ string Eth::eth_call(Json::Value const& _json, string const& _blockNumber)
 	{
 		TransactionSkeleton t = toTransactionSkeleton(_json);
 		setTransactionDefaults(t);
+		cdebug << "t.from=" << t.from << ",t.to=" << t.to << ",t.data=" << t.data << ",t.gas=" << t.gas << ",t.gasPrice=" << t.gasPrice << ",_blockNumber=" << _blockNumber;
 		ExecutionResult er = client()->call(t.from, t.value, t.to, t.data, t.gas, t.gasPrice, jsToBlockNumber(_blockNumber), FudgeFactor::Lenient);
+		std::string ret = toJS(er.output);
+		cdebug << "_json=" << _json << ",ret=" << ret;
 		return toJS(er.output);
 	}
 	catch (...)
@@ -771,3 +774,20 @@ Ethash& Eth::getEthash()
 {
     return asEthash(*client()->sealEngine());
 }
+
+std::string Eth::eth_getNodes(string const& _node)
+{
+	cdebug << "_node=" << _node;
+	return client()->getNodes(_node, LatestBlock);
+}
+
+std::string Eth::eth_getNodeAbi()
+{
+	return client()->getNodeAbi();
+}
+
+std::string Eth::eth_getOwner()
+{
+	return client()->getOwner();
+}
+

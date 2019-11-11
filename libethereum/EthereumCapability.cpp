@@ -632,6 +632,10 @@ bool EthereumCapability::interpretCapabilityPacket(
     auto& peer = m_peers[_peerID];
     peer.setLastAsk(std::chrono::system_clock::to_time_t(chrono::system_clock::now()));
 
+	if(m_filter != nullptr && m_filter(_peerID, _id, _r)){
+		return true;
+	}
+
     try
     {
         switch (_id)

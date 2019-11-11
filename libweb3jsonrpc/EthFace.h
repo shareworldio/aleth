@@ -66,6 +66,10 @@ namespace dev {
                     this->bindAndAddMethod(jsonrpc::Procedure("eth_syncing", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT,  NULL), &dev::rpc::EthFace::eth_syncingI);
                     this->bindAndAddMethod(jsonrpc::Procedure("eth_estimateGas", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, "param1",jsonrpc::JSON_OBJECT, NULL), &dev::rpc::EthFace::eth_estimateGasI);
                     this->bindAndAddMethod(jsonrpc::Procedure("eth_chainId", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING,  NULL), &dev::rpc::EthFace::eth_chainIdI);
+
+					this->bindAndAddMethod(jsonrpc::Procedure("eth_getNodes", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, "param1",jsonrpc::JSON_STRING, NULL), &dev::rpc::EthFace::eth_getNodesI);
+					this->bindAndAddMethod(jsonrpc::Procedure("eth_getNodeAbi", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, NULL), &dev::rpc::EthFace::eth_getNodeAbiI);
+					this->bindAndAddMethod(jsonrpc::Procedure("eth_getOwner", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, NULL), &dev::rpc::EthFace::eth_getOwnerI);
                 }
 
                 inline virtual void eth_protocolVersionI(const Json::Value &request, Json::Value &response)
@@ -290,6 +294,22 @@ namespace dev {
                     (void)request;
                     response = this->eth_chainId();
                 }
+
+				inline virtual void eth_getNodesI(const Json::Value &request, Json::Value &response)
+                {
+                    response = this->eth_getNodes(request[0u].asString());
+                }
+				inline virtual void eth_getNodeAbiI(const Json::Value &request, Json::Value &response)
+                {
+                	(void)request;
+                    response = this->eth_getNodeAbi();
+                }
+				inline virtual void eth_getOwnerI(const Json::Value &request, Json::Value &response)
+                {
+                	(void)request;
+                    response = this->eth_getOwner();
+                }
+				
                 virtual std::string eth_protocolVersion() = 0;
                 virtual std::string eth_hashrate() = 0;
                 virtual std::string eth_coinbase() = 0;
@@ -342,6 +362,10 @@ namespace dev {
                 virtual Json::Value eth_syncing() = 0;
                 virtual std::string eth_estimateGas(const Json::Value& param1) = 0;
                 virtual std::string eth_chainId() = 0;
+
+				virtual std::string eth_getNodes(std::string const& _node) = 0;
+				virtual std::string eth_getNodeAbi() = 0;
+				virtual std::string eth_getOwner() = 0;
         };
 
     }

@@ -11,6 +11,9 @@
 #include <libethcore/BlockHeader.h>
 #include "Account.h"
 
+#include <vector>
+#include <libp2p/Common.h>
+
 namespace dev
 {
 namespace eth
@@ -51,6 +54,9 @@ struct ChainParams: public ChainOperationParams
     ChainParams loadConfig(std::string const& _json, h256 const& _stateRoot = {},
         const boost::filesystem::path& _configPath = {}) const;
 
+	std::vector<p2p::NodeSpec> exnodes;
+	bool exnodesMe = false;
+	bool exnodesAnyone = false;
 private:
     void populateFromGenesis(bytes const& _genesisRLP, AccountMap const& _state);
 

@@ -7,6 +7,7 @@
 #include "CommonIO.h"
 #include "FixedHash.h"
 #include "Terminal.h"
+#include "LogStream.h"
 #include <string>
 #include <vector>
 
@@ -64,27 +65,37 @@ enum Verbosity
 BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_errorLogger,
     boost::log::sources::severity_channel_logger_mt<>,
     (boost::log::keywords::severity = VerbosityError)(boost::log::keywords::channel = "error"))
+#ifndef cerror
 #define cerror LOG(dev::g_errorLogger::get())
+#endif
 
 BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_warnLogger,
     boost::log::sources::severity_channel_logger_mt<>,
     (boost::log::keywords::severity = VerbosityWarning)(boost::log::keywords::channel = "warn"))
+#ifndef cwarn
 #define cwarn LOG(dev::g_warnLogger::get())
+#endif
 
 BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_noteLogger,
     boost::log::sources::severity_channel_logger_mt<>,
     (boost::log::keywords::severity = VerbosityInfo)(boost::log::keywords::channel = "info"))
+#ifndef cnote
 #define cnote LOG(dev::g_noteLogger::get())
+#endif
 
 BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_debugLogger,
     boost::log::sources::severity_channel_logger_mt<>,
     (boost::log::keywords::severity = VerbosityDebug)(boost::log::keywords::channel = "debug"))
+#ifndef cdebug
 #define cdebug LOG(dev::g_debugLogger::get())
+#endif
 
 BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(g_traceLogger,
     boost::log::sources::severity_channel_logger_mt<>,
     (boost::log::keywords::severity = VerbosityTrace)(boost::log::keywords::channel = "trace"))
+#ifndef ctrace
 #define ctrace LOG(dev::g_traceLogger::get())
+#endif
 
 // Simple macro to log to any channel a message without creating a logger object
 // e.g. clog(VerbosityInfo, "channel") << "message";

@@ -56,6 +56,8 @@ add_library(
     vector_ref.h
     Worker.cpp
     Worker.h
+    LogStream.cpp
+    LogStream.h
 )
 
 # Needed to prevent including system-level boost headers:
@@ -65,7 +67,7 @@ target_link_libraries(devcore PUBLIC aleth-buildinfo Boost::filesystem Boost::sy
 
 hunter_add_package(leveldb)
 find_package(leveldb CONFIG REQUIRED)
-target_link_libraries(devcore PRIVATE leveldb::leveldb)
+target_link_libraries(devcore PRIVATE leveldb::leveldb contract solidity)
 
 if(ROCKSDB)
     hunter_add_package(rocksdb)

@@ -5,6 +5,7 @@
 #include "SealEngine.h"
 #include "TransactionBase.h"
 #include <libethcore/CommonJS.h>
+#include <libsolidity/Solidity.h>
 
 using namespace std;
 namespace dev
@@ -146,10 +147,14 @@ void SealEngineFace::verifyTransaction(ImportRequirements::value _ir, Transactio
                                   (bigint)(_t.baseGasRequired(schedule)), (bigint)_t.gas()));
 
     // Avoid transactions that would take us beyond the block gas limit.
-    if (_gasUsed + (bigint)_t.gas() > _header.gasLimit())
-        BOOST_THROW_EXCEPTION(BlockGasLimitReached() << RequirementErrorComment(
+    if (_gasUsed + (bigint)_t.gas() > _header.gasLimit()){
+		cdebug << "_gasUsed:" << _gasUsed << ",_t.gas():" << _t.gas() << ",_header.gasLimit()" << _header.gasLimit();
+		if(jsToAddress(nodeAddress()) != _t.from()){
+        	BOOST_THROW_EXCEPTION(BlockGasLimitReached() << RequirementErrorComment(
                                   (bigint)(_header.gasLimit() - _gasUsed), (bigint)_t.gas(),
                                   string("_gasUsed + (bigint)_t.gas() > _header.gasLimit()")));
+		}
+    }
 }
 
 SealEngineFace* SealEngineRegistrar::create(ChainOperationParams const& _params)

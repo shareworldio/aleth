@@ -215,6 +215,12 @@ public:
     ///< Get POW depending on sealengine it's using
     std::tuple<h256, h256, h256> getWork() override;
 
+	virtual bytes call(Address _dest, bytes const& _data, BlockNumber _blockNumber) override;
+	void onImprted(Address _contrant, std::function< void() > _f);
+	void setFilter(std::function<bool(p2p::NodeID, unsigned _id, RLP const& _r)> _filter);
+	virtual std::string getNodes(std::string const& _node, BlockNumber _blockNumber) override;
+	virtual std::string getNodeAbi()        const override;   
+	virtual std::string getOwner()     override;
 protected:
     /// Perform critical setup functions.
     /// Must be called in the constructor of the finally derived class.
@@ -258,13 +264,14 @@ protected:
     void doneWorking() override;
 
     /// Called when wouldSeal(), pendingTransactions() have changed.
-    void rejigSealing();
+    virtual void rejigSealing();
 
     /// Called on chain changes
     void onDeadBlocks(h256s const& _blocks, h256Hash& io_changed);
 
     /// Called on chain changes
     virtual void onNewBlocks(h256s const& _blocks, h256Hash& io_changed);
+	virtual void reportBlocks(h256s const& _blocks){(void)_blocks;};
 
     /// Called after processing blocks by onChainChanged(_ir)
     void resyncStateFromChain();
@@ -371,6 +378,9 @@ protected:
 
     Logger m_logger{createLogger(VerbosityInfo, "client")};
     Logger m_loggerDetail{createLogger(VerbosityDebug, "client")};
+
+	RecursiveMutex x_onImprted;
+	std::map<Address, std::vector< std::function< void() > > > m_onImprted;
 };
 
 }

@@ -271,6 +271,12 @@ public:
     std::unique_ptr<ba::steady_timer> createTimer(std::chrono::seconds const& _expiryDelay,
         std::function<void(const boost::system::error_code& error)>&& _f);
 
+
+	bool onTick(unsigned _t, std::function<void (const boost::system::error_code& _e)> _fun);
+	bool onInit(std::function<void ()> _fun);
+	io::io_context& ioContext() { return m_ioContext; }
+	KeyPair keyPair() const { return m_alias; }
+
 protected:
     /*
      * Used by the host to run a capability's background work loop
@@ -425,6 +431,9 @@ private:
     mutable Logger m_logger{createLogger(VerbosityDebug, "net")};
     Logger m_detailsLogger{createLogger(VerbosityTrace, "net")};
     Logger m_infoLogger{createLogger(VerbosityInfo, "net")};
+
+	std::list<std::shared_ptr<boost::asio::deadline_timer>> m_tickTimer;
+	Mutex x_tickTimer;
 };
 
 }

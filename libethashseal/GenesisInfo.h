@@ -24,6 +24,7 @@ enum class Network
     // Morden = 2,
     /// New Ropsten Test Network
     Ropsten = 3,
+    Qpos = 5,
     /// MainNetwork rules but without genesis accounts (for transaction tests).
     MainNetworkTest = 69,
     /// Normal Frontier/Homestead/DAO/EIP150/EIP158 chain without all the premine.

@@ -627,6 +627,7 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 {
     // Create and initialize the executive. This will throw fairly cheaply and quickly if the
     // transaction is bad in any way.
+    cdebug << ",_t.gas()=" << _t.gas();
     Executive e(*this, _envInfo, _sealEngine);
     ExecutionResult res;
     e.setResultRecipient(res);
@@ -655,6 +656,8 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
     TransactionReceipt const receipt = _envInfo.number() >= _sealEngine.chainParams().byzantiumForkBlock ?
         TransactionReceipt(statusCode, startGasUsed + e.gasUsed(), e.logs()) :
         TransactionReceipt(rootHash(), startGasUsed + e.gasUsed(), e.logs());
+
+	cdebug << "res.excepted=" << (int)res.excepted << ",res.gasUsed=" << res.gasUsed << ",_t.gas()=" << _t.gas() << ",res.output=" << res.output;
     return make_pair(res, receipt);
 }
 

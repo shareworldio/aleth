@@ -869,3 +869,12 @@ void Block::cleanup()
 
     resetCurrent();
 }
+
+bool Block::empty() const
+{
+	if(!m_transactions.empty())
+		return false;
+
+	return m_receipts.empty();
+}
+

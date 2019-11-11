@@ -107,6 +107,10 @@ public:
 	virtual std::string eth_chainId() override;
 	
 	void setTransactionDefaults(eth::TransactionSkeleton& _t);
+
+	virtual std::string eth_getNodes(std::string const& _node) override;
+	virtual std::string eth_getNodeAbi() override;
+	virtual std::string eth_getOwner() override;
 protected:
 
 	eth::Interface* client() { return &m_eth; }

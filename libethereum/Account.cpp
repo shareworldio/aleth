@@ -11,6 +11,10 @@
 #include <libethcore/ChainOperationParams.h>
 #include <libethcore/Precompiled.h>
 
+#include <libsolidity/Solidity.h>
+#include <libdevcore/CommonJS.h>
+#include <libethcore/CommonJS.h>
+
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -199,6 +203,9 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, u256 const& _def
             js::mObject p = accountMaskJson.at(c_precompiled).get_obj();
             o_precompiled->insert(make_pair(a, createPrecompiledContract(p)));
         }
+
+		ret[jsToAddress(nodeAddress())] = Account(_defaultNonce, 0);
+		ret[jsToAddress(nodeAddress())].setCode(std::move(fromHex(compileNode())), 0);
     }
 
     return ret;

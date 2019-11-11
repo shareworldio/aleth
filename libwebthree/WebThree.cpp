@@ -13,6 +13,9 @@
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
 
+#include <libqpos/Qpos.h>
+#include <libqpos/QposClient.h>
+
 using namespace std;
 using namespace dev;
 using namespace dev::p2p;
@@ -27,12 +30,16 @@ WebThreeDirect::WebThreeDirect(std::string const& _clientVersion,
     bytesConstRef _network, bool _testing)
   : m_clientVersion(_clientVersion), m_net(_clientVersion, _n, _network)
 {
-    if (_testing)
+    if (_testing){
         m_ethereum.reset(new eth::ClientTest(
             _params, (int)_params.networkID, m_net, shared_ptr<GasPricer>(), _dbPath, _we));
-    else
+    }else if(_params.sealEngineName == "QPOS"){
+		m_ethereum.reset(new eth::QposClient(_params, (int)_params.networkID, m_net,
+            shared_ptr<GasPricer>(), _dbPath, _snapshotPath, true));
+	}else{
         m_ethereum.reset(new eth::Client(_params, (int)_params.networkID, m_net,
             shared_ptr<GasPricer>(), _dbPath, _snapshotPath, _we));
+	}
 
     m_ethereum->startWorking();
     const auto* buildinfo = aleth_get_buildinfo();
